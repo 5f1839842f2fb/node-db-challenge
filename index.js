@@ -7,7 +7,10 @@ const db = require('./data/db')
 server.use(express.json());
 
 const validateId = (req, res, next) => {
-  db('projects').where({ id: req.body.id})
+  if (!("project_id" in req.body)) {
+    res.status(400).json({ message: "project_id required" })
+  } else {
+    db('projects').where({ id: req.body.project_id})
   .then(response => {
     if (response.length !== 0) {
       next()
@@ -15,7 +18,12 @@ const validateId = (req, res, next) => {
       res.status(400).json({ message: "invalid id" })
     }
   })
+  }
 }
+
+server.get('/tasks', (req, res) => {
+  db('tasks').join('projects', {'tasks.id': 'projects.id'}).then(response => res.status(200).send(response))
+})
 
 server.get('/:url', (req, res) => {
   db(req.params.url).then(response => res.status(200).send(response))
